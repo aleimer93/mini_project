@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Campus Club Manager — Class 2</title>
+    <title>Campus Club Manager — Class 3</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -13,10 +13,23 @@
     </header>
 
     <main>
-      <!-- Club Cards render here -->
-      <section id="club-info" class="cards"></section>
+      <form id="club-form" class="form">
+      <div class="form-row">
+        <label for="club-name">Club Name</label>
+        <input type="text" id="club-name" placeholder="e.g., Chess Club">
+      </div>
+      <div class="form-row">
+        <label for="club-capacity">Club Capacity</label>
+        <input type="text" id="club-capacity" placeholder="e.g., 20">
+      </div>
+      <button type="submit" class="btn">Add Club</button>
+      <p id="error-message" class="error" role="alert" aria-live="polite"></p>
+      </form>
     </main>
 
+    <footer>
+      <small>&copy; <span id="year"></span> Campus Club Manager </small>
+    </footer>
     <script src="app.js"></script>
   </body>
 </html>
