@@ -106,16 +106,42 @@ function renderClubs() {
     const card = document.createElement("div");
     card.className = "club-card";
 
-    // For now we show top-level stats. Members/Events UI comes next classes.
-    const line1 = `${club.name}`;
-    const line2 = `${club.current}/${club.capacity} seats filled (${club.seatsLeft} left, ${club.percentFull}% full)`;
+    card.dataset.clubId = club.id;
+    const stats = `${club.current}/${club.capacity} seats filled, (${club.seatsLeft} left, ${club.percentFull}% full)`;
 
-    // Keep it simple for beginners: just a couple of lines
-    card.innerHTML = `<strong>${line1}</strong><br>${line2}`;
+    const membersHTML = club.members.map((member) => `
+      <li>${member.name}
+      <button class="link-btn" data-action="remove-member" data-club-id="${club.id}" data-member-id="${member.id}">Remove</button>
+      </li>
+    `)
+      .join("");
+
+    card.innerHTML = `
+
+      <div><strong>${club.name}</strong><br>${stats}</div>
+      <div class="member-section">
+        <h4>Members (${club.current})</h4>
+        <ul class="member-list">
+          ${membersHTML || "<li><em>No members yet</em></li>"}
+        </ul>
+        <div class="inline-form">
+          <input id="member-name-${club.id}" type="text" placeholder="e.g., Bob">
+          <button class="btn" data-action="add-member" data-club-id="${club.id}">Add Member</button>
+          <span id="status-${club.id}" class="note"></span>
+        </div>
+      </div>
+    `;
 
     container.appendChild(card);
   });
 }
+
+function setStatus(clubId, message) {
+  const element = document.getElementById(`status-${clubId}`)
+  if (element) element.textContent = message;
+}
+
+
 
 // ---- Add Club (uses the Club class) ----
 function addClub(name, capacity) {
