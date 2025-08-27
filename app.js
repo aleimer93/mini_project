@@ -141,7 +141,38 @@ function setStatus(clubId, message) {
   if (element) element.textContent = message;
 }
 
+const clubContainer = document.getElementById("club-info")
+clubContainer.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-action]")
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const clubId = btn.dataset.clubId;
+  const club = clubs.find((club) => club.id === club.id)
+  if (!club) return;
+  if (action === "add-member") {
+    const input = document.getElementById(`member-name-${clubId}`)
+    const name = (input?.value || "").trim();
+    if (name === "") {
+      setStatus(clubId, "Please enter a member name.")
+      return;
+    }
 
+    const result = club.addMember(name)
+    if (!result.ok) {
+      const msg =
+        result.reason === "full"
+        ? "Club is at capacity."
+        : result.reason === "duplicate"
+          ? "Member name already exists."
+          : "Invalid member name.";
+      setStatus(clubId, msg);
+      return;
+    }
+
+    setStatus(clubId, "Member added.");
+    renderClubs();
+  }
+})
 
 // ---- Add Club (uses the Club class) ----
 function addClub(name, capacity) {
