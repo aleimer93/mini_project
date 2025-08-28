@@ -1,7 +1,8 @@
-// Class 4 — OOP: Classes & Composition
-// Refactor state to use classes (Club, Member, Event) and interact via methods/getters.
+// Class 5 — DOM Rendering Patterns
+// Add Member UI + event delegation + render-from-state patterns.
+// Builds on Class 4 (classes for Club, Member, EventItem).
 
-// ---- Simple ID helper (avoids external libs for now) ----
+// ---- Simple ID helper ----
 let __id = 1;
 function makeId(prefix) { return `${prefix}_${__id++}`; }
 
@@ -21,14 +22,11 @@ class EventItem {
     this.date = new Date(dateStr);
     this.description = description;
     this.capacity = capacity;
-    this.rsvps = new Set(); // ids of members
+    this.rsvps = new Set();
   }
   toggleRsvp(memberId) {
-    if (this.rsvps.has(memberId)) {
-      this.rsvps.delete(memberId);
-    } else if (this.rsvps.size < this.capacity) {
-      this.rsvps.add(memberId);
-    }
+    if (this.rsvps.has(memberId)) this.rsvps.delete(memberId);
+    else if (this.rsvps.size < this.capacity) this.rsvps.add(memberId);
   }
 }
 
@@ -37,16 +35,13 @@ class Club {
     this.id = makeId("c");
     this.name = name;
     this.capacity = capacity;
-    this.members = []; // Member[]
-    this.events = [];  // EventItem[]
+    this.members = [];
+    this.events = [];
   }
+  get current()     { return this.members.length; }
+  get seatsLeft()   { return Math.max(0, this.capacity - this.current); }
+  get percentFull() { return this.capacity > 0 ? Math.round((this.current / this.capacity) * 100) : 0; }
 
-  // ---- Derived data (getters) ----
-  get current()      { return this.members.length; }
-  get seatsLeft()    { return Math.max(0, this.capacity - this.current); }
-  get percentFull()  { return this.capacity > 0 ? Math.round((this.current / this.capacity) * 100) : 0; }
-
-  // ---- Behavior ----
   addMember(name, role = "member") {
     if (!name || typeof name !== "string") return { ok: false, reason: "invalid-name" };
     if (this.seatsLeft <= 0)              return { ok: false, reason: "full" };
@@ -64,37 +59,32 @@ class Club {
     return false;
   }
 
-  addEvent(evt) {
-    if (evt instanceof EventItem) this.events.push(evt);
-  }
+  addEvent(evt) { if (evt instanceof EventItem) this.events.push(evt); }
 
   upcomingEvents() {
     const now = new Date();
     return this.events.filter(e => e.date >= now).sort((a, b) => a.date - b.date);
   }
 
-  // Helper to migrate from last week's plain objects
   static fromPlain(obj) {
     const c = new Club(obj.name, obj.capacity);
-    // Seed members to match previous "current" counts
-    for (let i = 0; i < (obj.current || 0); i++) {
-      c.addMember(`Member ${i + 1}`);
-    }
+    for (let i = 0; i < (obj.current || 0); i++) c.addMember(`Member ${i + 1}`);
     return c;
   }
 }
 
-// ---- App State (now using Club instances) ----
+// ---- App State ----
 let clubs = [
-  Club.fromPlain({ name: "Coding Club", current: 12, capacity: 25 }),
-  Club.fromPlain({ name: "Art Club",    current: 8,  capacity: 15 }),
+  Club.fromPlain({ name: "Coding Club", current: 3, capacity: 5 }),
+  Club.fromPlain({ name: "Art Club",    current: 2, capacity: 4 }),
 ];
 
-// ---- Render ----
+// ---- Rendering ----
 function renderClubs() {
   const container = document.getElementById("club-info");
   container.innerHTML = "";
 
+  // Empty state
   if (clubs.length === 0) {
     const p = document.createElement("p");
     p.textContent = "No clubs yet. Add one above to get started.";
@@ -105,27 +95,30 @@ function renderClubs() {
   clubs.forEach((club) => {
     const card = document.createElement("div");
     card.className = "club-card";
-
     card.dataset.clubId = club.id;
-    const stats = `${club.current}/${club.capacity} seats filled, (${club.seatsLeft} left, ${club.percentFull}% full)`;
 
-    const membersHTML = club.members.map((member) => `
-      <li>${member.name}
-      <button class="link-btn" data-action="remove-member" data-club-id="${club.id}" data-member-id="${member.id}">Remove</button>
+    const stats = `${club.current}/${club.capacity} seats filled (${club.seatsLeft} left, ${club.percentFull}% full)`;
+
+    // Members list UI + inline add form
+    const membersHtml = club.members.map(m => `
+      <li>${m.name}
+        <button class="link-btn" data-action="remove-member" data-club-id="${club.id}" data-member-id="${m.id}">
+          Remove
+        </button>
       </li>
-    `)
-      .join("");
+    `).join("");
 
     card.innerHTML = `
-
       <div><strong>${club.name}</strong><br>${stats}</div>
+
       <div class="member-section">
         <h4>Members (${club.current})</h4>
         <ul class="member-list">
-          ${membersHTML || "<li><em>No members yet</em></li>"}
+          ${membersHtml || "<li><em>No members yet</em></li>"}
         </ul>
+
         <div class="inline-form">
-          <input id="member-name-${club.id}" type="text" placeholder="e.g., Bob">
+          <input id="member-name-${club.id}" type="text" placeholder="e.g., Jordan" />
           <button class="btn" data-action="add-member" data-club-id="${club.id}">Add Member</button>
           <span id="status-${club.id}" class="note"></span>
         </div>
@@ -136,51 +129,51 @@ function renderClubs() {
   });
 }
 
+// Helper: set a tiny status message inside a club card
 function setStatus(clubId, message) {
-  const element = document.getElementById(`status-${clubId}`)
-  if (element) element.textContent = message;
+  const el = document.getElementById(`status-${clubId}`);
+  if (el) el.textContent = message;
 }
 
-const clubContainer = document.getElementById("club-info")
+// ---- Event Delegation for dynamic UI ----
+const clubContainer = document.getElementById("club-info");
+
 clubContainer.addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-action]")
+  const btn = e.target.closest("[data-action]");
   if (!btn) return;
+
   const action = btn.dataset.action;
   const clubId = btn.dataset.clubId;
-  const club = clubs.find((club) => club.id === club.id)
+  const club = clubs.find(c => c.id === clubId);
   if (!club) return;
-  if (action === "add-member") {
-    const input = document.getElementById(`member-name-${clubId}`)
-    const name = (input?.value || "").trim();
-    if (name === "") {
-      setStatus(clubId, "Please enter a member name.")
-      return;
-    }
 
-    const result = club.addMember(name)
+  if (action === "add-member") {
+    const input = document.getElementById(`member-name-${clubId}`);
+    const name = (input?.value || "").trim();
+
+    if (name === "") { setStatus(clubId, "Please enter a member name."); return; }
+
+    const result = club.addMember(name);
     if (!result.ok) {
-      const msg =
-        result.reason === "full"
-        ? "Club is at capacity."
-        : result.reason === "duplicate"
-          ? "Member name already exists."
-          : "Invalid member name.";
+      const msg = result.reason === "full"      ? "Club is at capacity."
+               : result.reason === "duplicate" ? "Member name already exists."
+               : "Invalid member name.";
       setStatus(clubId, msg);
       return;
     }
 
     setStatus(clubId, "Member added.");
+    renderClubs(); // Re-render from state
+  }
+
+  if (action === "remove-member") {
+    const memberId = btn.dataset.memberId;
+    club.removeMember(memberId);
     renderClubs();
   }
-})
+});
 
-// ---- Add Club (uses the Club class) ----
-function addClub(name, capacity) {
-  clubs.push(new Club(name, capacity));
-  renderClubs();
-}
-
-// ---- Form handler (same UI as Class 3, now creating Club instances) ----
+// ---- Create Club form (from earlier classes) ----
 document.getElementById("club-form").addEventListener("submit", function (e) {
   e.preventDefault();
 
@@ -203,7 +196,8 @@ document.getElementById("club-form").addEventListener("submit", function (e) {
   }
 
   errorMessage.textContent = "";
-  addClub(name, capacity);
+  clubs.push(new Club(name, capacity));
+  renderClubs();
 
   nameInput.value = "";
   capacityInput.value = "";
