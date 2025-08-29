@@ -1,6 +1,5 @@
-// Class 5 — DOM Rendering Patterns
-// Add Member UI + event delegation + render-from-state patterns.
-// Builds on Class 4 (classes for Club, Member, EventItem).
+// Class 6 — Arrays & Loops: Search / Filter / Sort
+// Build on Class 5 (Add Member UI) by adding a toolbar to search/filter/sort clubs.
 
 // ---- Simple ID helper ----
 let __id = 1;
