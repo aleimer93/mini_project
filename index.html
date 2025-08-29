@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Campus Club Manager — Class 5</title>
+  <title>Campus Club Manager — Class 6</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -26,6 +26,21 @@
       <button type="submit" class="btn">Add Club</button>
       <p id="error-message" class="error" role="alert" aria-live="polite"></p>
     </form>
+
+    <!-- Toolbar -->
+    <section class="toolbar">
+      <input id="search" class="input" placeholder="Search clubs..." type="text" aria-label="Search clubs by name"/>
+      <label class="checkbox">
+        <input id="only-open" type="checkbox"/>Has seats only
+      </label>
+      <label for="sort-by">Sort by:</label>
+      <select id="sort-by" class="select" aria-label="Sort clubs">
+      <option value="name-asc">Name (A-Z)</option>
+      <option value="name-desc">Name (Z-A)</option>
+      <option value="seats-desc">Seats Left (High to Low)</option>
+      <option value="capacity-desc">Capacity (High to Low)</option>
+      </select>
+    </section>
 
     <!-- Clubs render here -->
     <section id="club-info" class="cards"></section>

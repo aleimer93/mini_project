@@ -76,23 +76,55 @@ class Club {
 // ---- App State ----
 let clubs = [
   Club.fromPlain({ name: "Coding Club", current: 3, capacity: 5 }),
-  Club.fromPlain({ name: "Art Club",    current: 2, capacity: 4 }),
+  Club.fromPlain({ name: "Art Club",    current: 8, capacity: 8 }),
+  Club.fromPlain({ name: "Book Club",    current: 8, capacity: 12 }),
+  Club.fromPlain({name: "Robotics", current: 5, capacity: 6}),
 ];
+
+const ui = {
+  searchText: "",
+  onlyOpen: false,
+  sortBy: "name-asc", // name-asc, name-desc, seats-desc, capacity-desc
+}
+
+function getVisibleClubs() {
+  let list = clubs.slice();
+  const q = ui.searchText.trim().toLowerCase();
+  if (q) list = list.filter((club) => club.name.toLowerCase().includes(q));
+  if (ui.onlyOpen) list = list.filter((club) => club.seatsLeft > 0);
+  list.sort((a, b) => {
+    switch (ui.sortBy) {
+      case "name-asc":
+        return a.name.localeCompare(b.name);
+      case "name-desc":
+        return b.name.localeCompare(a.name);
+      case "seats-desc":
+        return b.seatsLeft - a.seatsLeft;
+      case "capacity-desc":
+        return b.capacity - a.capacity;
+      default:
+        return 0;
+    }
+  });
+  return list;
+}
 
 // ---- Rendering ----
 function renderClubs() {
   const container = document.getElementById("club-info");
   container.innerHTML = "";
 
-  // Empty state
-  if (clubs.length === 0) {
+  const visible = getVisibleClubs();
+
+  // Empty / Not Found Validation
+  if (visible.length === 0) {
     const p = document.createElement("p");
-    p.textContent = "No clubs yet. Add one above to get started.";
+    p.textContent = "No clubs match your filters.";
     container.appendChild(p);
     return;
   }
 
-  clubs.forEach((club) => {
+  visible.forEach((club) => {
     const card = document.createElement("div");
     card.className = "club-card";
     card.dataset.clubId = club.id;
@@ -202,6 +234,21 @@ document.getElementById("club-form").addEventListener("submit", function (e) {
   nameInput.value = "";
   capacityInput.value = "";
   nameInput.focus();
+});
+
+document.getElementById("search").addEventListener("input", (e) => {
+  ui.searchText = e.target.value;
+  renderClubs();
+});
+
+document.getElementById("only-open").addEventListener("change", (e) => {
+  ui.onlyOpen = e.target.checked;
+  renderClubs();
+});
+
+document.getElementById("sort-by").addEventListener("change", (e) => {
+  ui.sortBy = e.target.value;
+  renderClubs();
 });
 
 // ---- Footer year & initial paint ----
