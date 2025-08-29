@@ -75,9 +75,9 @@ class Club {
 // ---- App State ----
 let clubs = [
   Club.fromPlain({ name: "Coding Club", current: 3, capacity: 5 }),
-  Club.fromPlain({ name: "Art Club",    current: 8, capacity: 8 }),
-  Club.fromPlain({ name: "Book Club",    current: 8, capacity: 12 }),
-  Club.fromPlain({name: "Robotics", current: 5, capacity: 6}),
+  Club.fromPlain({ name: "Art Club", current: 8, capacity: 8 }),
+  Club.fromPlain({ name: "Book Club", current: 8, capacity: 12 }),
+  Club.fromPlain({ name: "Robotics", current: 5, capacity: 6 }),
 ];
 
 const ui = {
